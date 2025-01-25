@@ -1,7 +1,6 @@
 package sitter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -21,7 +20,7 @@ type (
 
 	QueryCapture struct {
 		ID   uint32
-		Node Node
+		Node *Node
 	}
 
 	QueryMatch struct {
@@ -41,31 +40,31 @@ const (
 	QueryErrorLanguage
 )
 
-func (t *TreeSitter) NewQuery(pattern string, l Language) (Query, error) {
-	errOffPtr, err := t.call(_malloc, 4)
+func (ts *TreeSitter) NewQuery(pattern string, l *Language) (*Query, error) {
+	errOffPtr, err := ts.call(_malloc, 4)
 	if err != nil {
-		return Query{}, fmt.Errorf("allocating query error offset: %w", err)
+		return nil, fmt.Errorf("allocating query error offset: %w", err)
 	}
-	errTypePtr, err := t.call(_malloc, 4)
+	errTypePtr, err := ts.call(_malloc, 4)
 	if err != nil {
-		return Query{}, fmt.Errorf("allocating query error type: %w", err)
+		return nil, fmt.Errorf("allocating query error type: %w", err)
 	}
-	patternPtr, patternSize, freePattern, err := t.allocateString(pattern)
+	patternPtr, patternSize, freePattern, err := ts.allocateString(pattern)
 	if err != nil {
-		return Query{}, fmt.Errorf("allocating pattern string: %w", err)
+		return nil, fmt.Errorf("allocating pattern string: %w", err)
 	}
 	defer freePattern()
-	queryPtr, err := t.call(_queryNew, l.l, patternPtr, patternSize, errOffPtr[0], errTypePtr[0])
+	queryPtr, err := ts.call(_queryNew, l.l, patternPtr, patternSize, errOffPtr[0], errTypePtr[0])
 	if err != nil {
-		return Query{}, fmt.Errorf("creating query: %w", err)
+		return nil, fmt.Errorf("creating query: %w", err)
 	}
-	errorOffset, ok := t.mod.Memory().ReadUint32Le(uint32(errOffPtr[0]))
+	errorOffset, ok := ts.mod.Memory().ReadUint32Le(uint32(errOffPtr[0]))
 	if !ok {
-		return Query{}, errors.New("invalid query error offset")
+		return nil, errors.New("invalid query error offset")
 	}
-	errorType, ok := t.mod.Memory().ReadUint32Le(uint32(errTypePtr[0]))
+	errorType, ok := ts.mod.Memory().ReadUint32Le(uint32(errTypePtr[0]))
 	if !ok {
-		return Query{}, errors.New("invalid query error type")
+		return nil, errors.New("invalid query error type")
 	}
 
 	if errorType != QueryErrorNone {
@@ -121,13 +120,13 @@ func (t *TreeSitter) NewQuery(pattern string, l Language) (Query, error) {
 				lines[0], whitespace)
 		}
 
-		return Query{}, errors.New(message)
+		return nil, errors.New(message)
 	}
 
-	return Query{t, queryPtr[0]}, nil
+	return &Query{ts, queryPtr[0]}, nil
 }
 
-func (q Query) CaptureNameForID(ctx context.Context, id uint32) (string, error) {
+func (q *Query) CaptureNameForID(id uint32) (string, error) {
 	strlenPtr, err := q.t.call(_malloc, 4)
 	if err != nil {
 		return "", fmt.Errorf("allocating string length: %w", err)
@@ -147,63 +146,63 @@ func (q Query) CaptureNameForID(ctx context.Context, id uint32) (string, error) 
 	return string(captureName), nil
 }
 
-func (t *TreeSitter) NewQueryCursor() (QueryCursor, error) {
-	qc, err := t.call(_queryCursorNew)
+func (ts *TreeSitter) NewQueryCursor() (*QueryCursor, error) {
+	qc, err := ts.call(_queryCursorNew)
 	if err != nil {
-		return QueryCursor{}, fmt.Errorf("creating query cursor: %w", err)
+		return nil, fmt.Errorf("creating query cursor: %w", err)
 	}
-	return QueryCursor{t, qc[0]}, nil
+	return &QueryCursor{ts, qc[0]}, nil
 }
 
-func (qc QueryCursor) Exec(q Query, n Node) error {
-	_, err := qc.t.call(_queryCursorExec, qc.qc, q.q, n.n)
+func (qc *QueryCursor) Exec(q *Query, n *Node) error {
+	_, err := qc.t.call(_queryCursorExec, qc.qc, q.q, n.ptr)
 	return err
 }
 
-func (t *TreeSitter) allocateQueryMatch() (uint64, error) {
+func (ts *TreeSitter) allocateQueryMatch() (uint64, error) {
 	// allocate tsquerymatch 12 bytes
-	nodePtr, err := t.call(_malloc, uint64(12))
+	nodePtr, err := ts.call(_malloc, uint64(12))
 	if err != nil {
 		return 0, fmt.Errorf("allocating query match: %w", err)
 	}
 	return nodePtr[0], nil
 }
 
-func (qc QueryCursor) NextMatch() (QueryMatch, bool, error) {
+func (qc QueryCursor) NextMatch() (*QueryMatch, bool, error) {
 	queryMatchPtr, err := qc.t.allocateQueryMatch()
 	if err != nil {
-		return QueryMatch{}, false, err
+		return nil, false, err
 	}
 	hasNextMatch, err := qc.t.call(_queryCursorNextMatch, qc.qc, queryMatchPtr)
 	if err != nil {
-		return QueryMatch{}, false, fmt.Errorf("getting query cursor next match: %w", err)
+		return nil, false, fmt.Errorf("getting query cursor next match: %w", err)
 	}
 	if hasNextMatch[0] == 0 {
-		return QueryMatch{}, false, nil
+		return nil, false, nil
 	}
 
 	queryMatchID, ok := qc.t.mod.Memory().ReadUint32Le(uint32(queryMatchPtr))
 	if !ok {
-		return QueryMatch{}, false, errors.New("invalid query match id")
+		return nil, false, errors.New("invalid query match id")
 	}
 	queryMatchPatternIndex, ok := qc.t.mod.Memory().ReadUint16Le(uint32(queryMatchPtr) + 4)
 	if !ok {
-		return QueryMatch{}, false, errors.New("invalid query match pattern index")
+		return nil, false, errors.New("invalid query match pattern index")
 	}
 	queryMatchCaptureCount, ok := qc.t.mod.Memory().ReadUint16Le(uint32(queryMatchPtr) + 6)
 	if !ok {
-		return QueryMatch{}, false, errors.New("invalid query match pattern index")
+		return nil, false, errors.New("invalid query match pattern index")
 	}
 	queryMatchCapturesPtr, ok := qc.t.mod.Memory().ReadUint32Le(uint32(queryMatchPtr) + 8)
 	if !ok {
-		return QueryMatch{}, false, errors.New("invalid query match captures pointer")
+		return nil, false, errors.New("invalid query match captures pointer")
 	}
 	qcs := make([]QueryCapture, queryMatchCaptureCount)
 	addr := queryMatchCapturesPtr
 	for i := range queryMatchCaptureCount {
 		captureIndex, ok := qc.t.mod.Memory().ReadUint32Le(addr + 24)
 		if !ok {
-			return QueryMatch{}, false, errors.New("invalid capture index")
+			return nil, false, errors.New("invalid capture index")
 		}
 		qcs[i] = QueryCapture{
 			ID:   captureIndex,
@@ -211,7 +210,7 @@ func (qc QueryCursor) NextMatch() (QueryMatch, bool, error) {
 		}
 		addr += 28
 	}
-	return QueryMatch{
+	return &QueryMatch{
 		ID:           queryMatchID,
 		PatternIndex: queryMatchPatternIndex,
 		Captures:     qcs,

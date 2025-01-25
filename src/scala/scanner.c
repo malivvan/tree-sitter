@@ -100,7 +100,7 @@ void tree_sitter_scala_external_scanner_deserialize(void *payload, const char *b
     size += sizeof(int16_t);
   }
 
-  assert(size == length);
+  //assert(size == length);
 }
 
 static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }

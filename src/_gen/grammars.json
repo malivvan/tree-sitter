@@ -194,9 +194,9 @@
       "alloc.h",
       "parser.h"
     ],
-    "reference": "v0.24.0",
-    "revision": "a45fda5fe73cda92f2593d16340b3f6bd46674b8",
-    "updateBasedOn": "tag"
+    "reference": "v0.22.0",
+    "revision": "",
+    "updateBasedOn": ""
   },
   {
     "language": "php",

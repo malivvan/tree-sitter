@@ -5,12 +5,12 @@ import (
 )
 
 type Node struct {
-	t *TreeSitter
-	n uint64
+	ts  *TreeSitter
+	ptr uint64
 }
 
-func newNode(t *TreeSitter, n uint64) Node {
-	return Node{t, n}
+func newNode(ts *TreeSitter, n uint64) *Node {
+	return &Node{ts, n}
 }
 
 func (ts *TreeSitter) allocateNode() (uint64, error) {
@@ -22,82 +22,82 @@ func (ts *TreeSitter) allocateNode() (uint64, error) {
 	return nodePtr[0], nil
 }
 
-func (n Node) Kind() (string, error) {
-	nodeTypeStrPtr, err := n.t.call(_nodeType, n.n)
+func (n *Node) Kind() (string, error) {
+	nodeTypeStrPtr, err := n.ts.call(_nodeType, n.ptr)
 	if err != nil {
 		return "", fmt.Errorf("getting node type: %w", err)
 	}
-	return n.t.readString(nodeTypeStrPtr[0])
+	return n.ts.readString(nodeTypeStrPtr[0])
 }
 
-func (n Node) Child(index uint64) (Node, error) {
-	nodePtr, err := n.t.allocateNode()
+func (n *Node) Child(index uint64) (*Node, error) {
+	nodePtr, err := n.ts.allocateNode()
 	if err != nil {
-		return Node{}, err
+		return nil, err
 	}
-	_, err = n.t.call(_nodeChild, nodePtr, n.n, index)
+	_, err = n.ts.call(_nodeChild, nodePtr, n.ptr, index)
 	if err != nil {
-		return Node{}, fmt.Errorf("getting node child: %w", err)
+		return nil, fmt.Errorf("getting node child: %w", err)
 	}
-	return newNode(n.t, nodePtr), nil
+	return newNode(n.ts, nodePtr), nil
 }
 
-func (n Node) NamedChild(index uint64) (Node, error) {
-	nodePtr, err := n.t.allocateNode()
+func (n *Node) NamedChild(index uint64) (*Node, error) {
+	nodePtr, err := n.ts.allocateNode()
 	if err != nil {
-		return Node{}, err
+		return nil, err
 	}
-	_, err = n.t.call(_nodeNamedChild, nodePtr, n.n, index)
+	_, err = n.ts.call(_nodeNamedChild, nodePtr, n.ptr, index)
 	if err != nil {
-		return Node{}, fmt.Errorf("getting node child: %w", err)
+		return nil, fmt.Errorf("getting node child: %w", err)
 	}
-	return newNode(n.t, nodePtr), nil
+	return newNode(n.ts, nodePtr), nil
 }
 
-func (n Node) IsError() (bool, error) {
-	res, err := n.t.call(_nodeIsError, n.n)
+func (n *Node) IsError() (bool, error) {
+	res, err := n.ts.call(_nodeIsError, n.ptr)
 	if err != nil {
 		return false, fmt.Errorf("getting node is error: %w", err)
 	}
 	return res[0] == 1, nil
 }
 
-func (n Node) StartByte() (uint64, error) {
-	res, err := n.t.call(_nodeStartByte, n.n)
+func (n *Node) StartByte() (uint64, error) {
+	res, err := n.ts.call(_nodeStartByte, n.ptr)
 	if err != nil {
 		return 0, fmt.Errorf("getting node start byte: %w", err)
 	}
 	return res[0], nil
 }
 
-func (n Node) EndByte() (uint64, error) {
-	res, err := n.t.call(_nodeEndByte, n.n)
+func (n *Node) EndByte() (uint64, error) {
+	res, err := n.ts.call(_nodeEndByte, n.ptr)
 	if err != nil {
 		return 0, fmt.Errorf("getting node end byte: %w", err)
 	}
 	return res[0], nil
 }
 
-func (n Node) ChildCount() (uint64, error) {
-	res, err := n.t.call(_nodeChildCount, n.n)
+func (n *Node) ChildCount() (uint64, error) {
+	res, err := n.ts.call(_nodeChildCount, n.ptr)
 	if err != nil {
 		return 0, fmt.Errorf("getting node child count: %w", err)
 	}
 	return res[0], nil
 }
 
-func (n Node) NamedChildCount() (uint64, error) {
-	res, err := n.t.call(_nodeNamedChildCount, n.n)
+func (n *Node) NamedChildCount() (uint64, error) {
+	res, err := n.ts.call(_nodeNamedChildCount, n.ptr)
 	if err != nil {
 		return 0, fmt.Errorf("getting node child count: %w", err)
 	}
 	return res[0], nil
 }
 
-func (n Node) String() (string, error) {
-	strPtr, err := n.t.call(_nodeString, n.n)
+func (n *Node) String() (string, error) {
+	strPtr, err := n.ts.call(_nodeString, n.ptr)
 	if err != nil {
 		return "", fmt.Errorf("getting node string: %w", err)
 	}
-	return n.t.readString(strPtr[0])
+	return n.ts.readString(strPtr[0])
 }

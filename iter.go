@@ -1,7 +1,6 @@
 package sitter
 
 import (
-	"context"
 	"fmt"
 	"io"
 )
@@ -16,55 +15,55 @@ const (
 type Iterator struct {
 	named        bool
 	mode         IterMode
-	nodesToVisit []Node
+	nodesToVisit []*Node
 }
 
-func (t *TreeSitter) NewIterator(n Node, mode IterMode) Iterator {
-	return Iterator{
+func (ts *TreeSitter) NewIterator(n *Node, mode IterMode) *Iterator {
+	return &Iterator{
 		named:        false,
 		mode:         mode,
-		nodesToVisit: []Node{n},
+		nodesToVisit: []*Node{n},
 	}
 }
 
-func NewNamedIterator(n Node, mode IterMode) Iterator {
-	return Iterator{
+func NewNamedIterator(n *Node, mode IterMode) *Iterator {
+	return &Iterator{
 		named:        true,
 		mode:         mode,
-		nodesToVisit: []Node{n},
+		nodesToVisit: []*Node{n},
 	}
 }
 
-func (iter *Iterator) Next(ctx context.Context) (Node, error) {
+func (iter *Iterator) Next() (*Node, error) {
 	if len(iter.nodesToVisit) == 0 {
-		return Node{}, io.EOF
+		return nil, io.EOF
 	}
 
-	var n Node
+	var n *Node
 	n, iter.nodesToVisit = iter.nodesToVisit[0], iter.nodesToVisit[1:]
 
-	var children []Node
+	var children []*Node
 	if iter.named {
 		namedChildCount, err := n.NamedChildCount()
 		if err != nil {
-			return Node{}, fmt.Errorf("getting named child count: %w", err)
+			return nil, fmt.Errorf("getting named child count: %w", err)
 		}
 		for i := uint64(0); i < namedChildCount; i++ {
 			c, err := n.NamedChild(i)
 			if err != nil {
-				return Node{}, fmt.Errorf("getting named child: %w", err)
+				return nil, fmt.Errorf("getting named child: %w", err)
 			}
 			children = append(children, c)
 		}
 	} else {
 		childCount, err := n.ChildCount()
 		if err != nil {
-			return Node{}, fmt.Errorf("getting child count: %w", err)
+			return nil, fmt.Errorf("getting child count: %w", err)
 		}
 		for i := uint64(0); i < childCount; i++ {
 			c, err := n.Child(i)
 			if err != nil {
-				return Node{}, fmt.Errorf("getting child: %w", err)
+				return nil, fmt.Errorf("getting child: %w", err)
 			}
 			children = append(children, c)
 		}
@@ -81,9 +80,9 @@ func (iter *Iterator) Next(ctx context.Context) (Node, error) {
 	return n, nil
 }
 
-func (iter *Iterator) ForEach(ctx context.Context, fn func(Node) error) error {
+func (iter *Iterator) ForEach(fn func(*Node) error) error {
 	for {
-		n, err := iter.Next(ctx)
+		n, err := iter.Next()
 		if err != nil {
 			return err
 		}

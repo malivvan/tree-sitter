@@ -64,7 +64,7 @@ func main() {
 	}
 }
 
-func walk(ctx context.Context, node sitter.Node, indent int) error {
+func walk(ctx context.Context, node *sitter.Node, indent int) error {
 	s, err := node.String()
 	if err != nil {
 		return err

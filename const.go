@@ -1,29 +1,5 @@
 package sitter
 
-// malloc:                ts.mod.ExportedFunction("malloc"),
-// free:                  ts.mod.ExportedFunction("free"),
-// strlen:                ts.mod.ExportedFunction("strlen"),
-// parserNew:             ts.mod.ExportedFunction("ts_parser_new"),
-// parserParseString:     ts.mod.ExportedFunction("ts_parser_parse_string"),
-// parserSetLanguage:     ts.mod.ExportedFunction("ts_parser_set_language"),
-// parserDelete:          ts.mod.ExportedFunction("ts_parser_delete"),
-// queryNew:              ts.mod.ExportedFunction("ts_query_new"),
-// queryCursorNew:        ts.mod.ExportedFunction("ts_query_cursor_new"),
-// queryCusorExec:        ts.mod.ExportedFunction("ts_query_cursor_exec"),
-// queryCursorNextMatch:  ts.mod.ExportedFunction("ts_query_cursor_next_match"),
-// queryCaptureNameForID: ts.mod.ExportedFunction("ts_query_capture_name_for_id"),
-// //	languageName:          ts.mod.ExportedFunction("ts_language_name"),
-// languageVersion:     ts.mod.ExportedFunction("ts_language_version"),
-// treeRootNode:        ts.mod.ExportedFunction("ts_tree_root_node"),
-// nodeString:          ts.mod.ExportedFunction("ts_node_string"),
-// nodeChildCount:      ts.mod.ExportedFunction("ts_node_child_count"),
-// nodeNamedChildCount: ts.mod.ExportedFunction("ts_node_named_child_count"),
-// nodeChild:           ts.mod.ExportedFunction("ts_node_child"),
-// nodeNamedChild:      ts.mod.ExportedFunction("ts_node_named_child"),
-// nodeType:            ts.mod.ExportedFunction("ts_node_type"),
-// nodeStartByte:       ts.mod.ExportedFunction("ts_node_start_byte"),
-// nodeEndByte:         ts.mod.ExportedFunction("ts_node_end_byte"),
-// nodeIsError:         ts.mod.ExportedFunction("ts_node_is_error"),
 const (
 	_malloc                = "malloc"
 	_free                  = "free"
@@ -50,25 +26,6 @@ const (
 	_nodeIsError           = "ts_node_is_error"
 )
 
-var _languages = []string{
-	"bash",
-	"c",
-	"cpp",
-	"c_sharp",
-	"css",
-	"cue",
-	"dockerfile",
-	"elixir",
-	"elm",
-	"go",
-	"groovy",
-	"hcl",
-	"html",
-	"java",
-	"javascript",
-	"kotlin",
-	"lua",
-}
 var _functions = [23]string{
 	_malloc,
 	_free,
@@ -93,4 +50,29 @@ var _functions = [23]string{
 	_nodeEndByte,
 	_nodeStartByte,
 	_nodeIsError,
+}
+
+var _languages = []string{
+	"bash",
+	"c",
+	"cpp",
+	"c_sharp",
+	"css",
+	"cue",
+	"dockerfile",
+	"elixir",
+	"elm",
+	"go",
+	"groovy",
+	"hcl",
+	"html",
+	"java",
+	"javascript",
+	"kotlin",
+	"lua",
+	"python",
+	"ruby",
+	"rust",
+	"sql",
+	"php",
 }

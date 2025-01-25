@@ -7,6 +7,12 @@ check-update:
 update-all:
 	@cd src && go run ./_gen update-all
 
+update-%:
+	@cd src && go run ./_gen update $*
+
+force-update-%:
+	@cd src && go run ./_gen force-update $*
+
 build:
 	@mkdir -p lib
 	@rm -f lib/ts.wasm
@@ -28,7 +34,12 @@ build:
 			src/javascript/parser.c src/javascript/scanner.c \
 			src/kotlin/parser.c src/kotlin/scanner.c \
 			src/lua/parser.c src/lua/scanner.c \
-			-o lib/ts.wasm -Os -fPIC -Wl,--no-entry -Wl,-z -Wl,stack-size=65536 -Wl,--strip-debug \
+			src/python/parser.c src/python/scanner.c \
+			src/ruby/parser.c src/ruby/scanner.c \
+			src/rust/parser.c src/rust/scanner.c \
+			src/sql/parser.c src/sql/scanner.c \
+			src/php/parser.c src/php/scanner.c \
+			-o lib/ts.wasm -Oz -fPIC -Wl,--no-entry -Wl,-z -Wl,stack-size=65536 -Wl,--strip-debug \
 			-Wl,--import-symbols \
 			-Wl,--export=malloc \
 			-Wl,--export=free \
@@ -70,10 +81,16 @@ build:
 			-Wl,--export=tree_sitter_java \
 			-Wl,--export=tree_sitter_javascript \
 			-Wl,--export=tree_sitter_kotlin \
-			-Wl,--export=tree_sitter_lua
-
+			-Wl,--export=tree_sitter_lua \
+			-Wl,--export=tree_sitter_python \
+			-Wl,--export=tree_sitter_ruby \
+			-Wl,--export=tree_sitter_rust \
+			-Wl,--export=tree_sitter_sql \
+			-Wl,--export=tree_sitter_php
 	@go run ./lib/_gen
 
-
-
+pack:
+	@du -h lib/ts.wasm
+	@brotli --best lib/ts.wasm -o lib/ts.wasm.br && rm lib/ts.wasm
+	@du -h lib/ts.wasm.br
 

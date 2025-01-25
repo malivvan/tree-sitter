@@ -81,16 +81,18 @@ func root(args []string) error {
 
 	case "update":
 		if len(args) < 2 {
-			return fmt.Errorf("language argument is missing")
+			return fmt.Errorf("language argument is missing: %w", args)
 		}
 
-		fs := flag.NewFlagSet("update", flag.ExitOnError)
-		force := fs.Bool("force", false, "re-download grammar even if revision is the same")
-		flagsParse(fs, args[2:])
-
-		s.Update(ctx, args[1], *force)
+		s.Update(ctx, args[1], false)
 		s.writeGrammarsFile(ctx)
+	case "force-update":
+		if len(args) < 2 {
+			return fmt.Errorf("language argument is missing: %w", args)
+		}
 
+		s.Update(ctx, args[1], true)
+		s.writeGrammarsFile(ctx)
 	case "update-all":
 		fs := flag.NewFlagSet("update-all", flag.ExitOnError)
 		flagsParse(fs, args[1:])
