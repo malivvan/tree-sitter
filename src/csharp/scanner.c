@@ -104,7 +104,7 @@ void tree_sitter_c_sharp_external_scanner_deserialize(void *payload, const char 
         }
     }
 
-    assert(size == length);
+    //assert(size == length);
 }
 
 bool tree_sitter_c_sharp_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {

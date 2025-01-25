@@ -11,8 +11,23 @@ build:
 	@mkdir -p lib
 	@rm -f lib/ts.wasm
 	@zig cc --target=wasm32-wasi-musl -mexec-model=reactor -I src/ src/lib.c \
+			src/bash/parser.c src/bash/scanner.c \
 			src/c/parser.c \
 			src/cpp/parser.c src/cpp/scanner.c \
+			src/csharp/parser.c src/csharp/scanner.c \
+			src/css/parser.c src/css/scanner.c \
+			src/cue/parser.c src/cue/scanner.c \
+			src/dockerfile/parser.c src/dockerfile/scanner.c \
+			src/elixir/parser.c src/elixir/scanner.c \
+			src/elm/parser.c src/elm/scanner.c \
+			src/golang/parser.c \
+			src/groovy/parser.c src/groovy/scanner.c \
+			src/hcl/parser.c src/hcl/scanner.c \
+			src/html/parser.c src/html/scanner.c \
+			src/java/parser.c \
+			src/javascript/parser.c src/javascript/scanner.c \
+			src/kotlin/parser.c src/kotlin/scanner.c \
+			src/lua/parser.c src/lua/scanner.c \
 			-o lib/ts.wasm -Os -fPIC -Wl,--no-entry -Wl,-z -Wl,stack-size=65536 -Wl,--strip-debug \
 			-Wl,--import-symbols \
 			-Wl,--export=malloc \
@@ -39,8 +54,24 @@ build:
 			-Wl,--export=ts_node_start_byte \
 			-Wl,--export=ts_node_end_byte \
 			-Wl,--export=ts_node_is_error \
+			-Wl,--export=tree_sitter_bash \
+			-Wl,--export=tree_sitter_c \
 			-Wl,--export=tree_sitter_cpp \
-			-Wl,--export=tree_sitter_c
+			-Wl,--export=tree_sitter_c_sharp \
+			-Wl,--export=tree_sitter_css \
+			-Wl,--export=tree_sitter_cue \
+			-Wl,--export=tree_sitter_dockerfile \
+			-Wl,--export=tree_sitter_elixir \
+			-Wl,--export=tree_sitter_elm \
+			-Wl,--export=tree_sitter_go \
+			-Wl,--export=tree_sitter_groovy \
+			-Wl,--export=tree_sitter_hcl \
+			-Wl,--export=tree_sitter_html \
+			-Wl,--export=tree_sitter_java \
+			-Wl,--export=tree_sitter_javascript \
+			-Wl,--export=tree_sitter_kotlin \
+			-Wl,--export=tree_sitter_lua
+
 	@go run ./lib/_gen
 
 

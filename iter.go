@@ -19,7 +19,7 @@ type Iterator struct {
 	nodesToVisit []Node
 }
 
-func (t TreeSitter) NewIterator(n Node, mode IterMode) Iterator {
+func (t *TreeSitter) NewIterator(n Node, mode IterMode) Iterator {
 	return Iterator{
 		named:        false,
 		mode:         mode,
@@ -45,24 +45,24 @@ func (iter *Iterator) Next(ctx context.Context) (Node, error) {
 
 	var children []Node
 	if iter.named {
-		namedChildCount, err := n.NamedChildCount(ctx)
+		namedChildCount, err := n.NamedChildCount()
 		if err != nil {
 			return Node{}, fmt.Errorf("getting named child count: %w", err)
 		}
 		for i := uint64(0); i < namedChildCount; i++ {
-			c, err := n.NamedChild(ctx, i)
+			c, err := n.NamedChild(i)
 			if err != nil {
 				return Node{}, fmt.Errorf("getting named child: %w", err)
 			}
 			children = append(children, c)
 		}
 	} else {
-		childCount, err := n.ChildCount(ctx)
+		childCount, err := n.ChildCount()
 		if err != nil {
 			return Node{}, fmt.Errorf("getting child count: %w", err)
 		}
 		for i := uint64(0); i < childCount; i++ {
-			c, err := n.Child(ctx, i)
+			c, err := n.Child(i)
 			if err != nil {
 				return Node{}, fmt.Errorf("getting child: %w", err)
 			}

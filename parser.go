@@ -1,17 +1,16 @@
 package sitter
 
 import (
-	"context"
 	"fmt"
 )
 
 type Parser struct {
-	t TreeSitter
+	t *TreeSitter
 	p uint64
 }
 
-func (t TreeSitter) NewParser(ctx context.Context) (Parser, error) {
-	p, err := t.parserNew.Call(ctx)
+func (t *TreeSitter) NewParser() (Parser, error) {
+	p, err := t.call(_parserNew)
 	if err != nil {
 		return Parser{}, fmt.Errorf("creating parser: %w", err)
 	}
@@ -22,21 +21,21 @@ func (t TreeSitter) NewParser(ctx context.Context) (Parser, error) {
 	}, nil
 }
 
-func (p Parser) Close(ctx context.Context) error {
-	_, err := p.t.parserDelete.Call(ctx, p.p)
+func (p Parser) Close() error {
+	_, err := p.t.call(_parserDelete, p.p)
 	if err != nil {
 		return fmt.Errorf("closing parser: %w", err)
 	}
 	return nil
 }
 
-func (p Parser) SetLanguage(ctx context.Context, l Language) error {
-	ok, err := p.t.parserSetLanguage.Call(ctx, p.p, l.l)
+func (p Parser) SetLanguage(l Language) error {
+	ok, err := p.t.call(_parserSetLanguage, p.p, l.l)
 	if err != nil {
 		return fmt.Errorf("setting language: %w", err)
 	}
 	if ok[0] == 0 {
-		v, err := p.GetLanguageVersion(ctx, l)
+		v, err := p.GetLanguageVersion(l)
 		if err != nil {
 			return err
 		}
@@ -45,19 +44,19 @@ func (p Parser) SetLanguage(ctx context.Context, l Language) error {
 	return nil
 }
 
-func (p Parser) GetLanguageVersion(ctx context.Context, l Language) (uint64, error) {
-	v, err := p.t.languageVersion.Call(ctx, l.l)
+func (p Parser) GetLanguageVersion(l Language) (uint64, error) {
+	v, err := p.t.call(_languageVersion, l.l)
 	if err != nil {
 		return 0, fmt.Errorf("getting language version: %w", err)
 	}
 	return v[0], nil
 }
 
-func (p Parser) ParseString(ctx context.Context, str string) (Tree, error) {
-	strPtr, strSize, freeStr, err := p.t.allocateString(ctx, str)
+func (p Parser) ParseString(str string) (Tree, error) {
+	strPtr, strSize, freeStr, err := p.t.allocateString(str)
 	defer freeStr()
 
-	tree, err := p.t.parserParseString.Call(ctx, p.p, uint64(0), strPtr, strSize)
+	tree, err := p.t.call(_parserParseString, p.p, uint64(0), strPtr, strSize)
 	if err != nil {
 		return Tree{}, fmt.Errorf("calling ts_parser_parse_string: %w", err)
 	}

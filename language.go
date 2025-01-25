@@ -1,13 +1,13 @@
 package sitter
 
 import (
-	"context"
 	"fmt"
+	"strings"
 )
 
 type (
 	Language struct {
-		t TreeSitter
+		t *TreeSitter
 		l uint64
 	}
 
@@ -20,22 +20,19 @@ func (l LanguageError) Error() string {
 	return fmt.Sprintf("Incompatible language version %d", l.version)
 }
 
-func NewLanguage(l uint64, t TreeSitter) Language {
+func NewLanguage(l uint64, t *TreeSitter) Language {
 	return Language{l: l, t: t}
 }
 
-func (t TreeSitter) LanguageC(ctx context.Context) (Language, error) {
-	cLangPtr, err := t.languageC.Call(ctx)
-	if err != nil {
-		return Language{}, fmt.Errorf("initiating c language: %w", err)
+func (t *TreeSitter) Language(name string) (Language, error) {
+	name = strings.ToLower(name)
+	lang, ok := t.lang[name]
+	if !ok {
+		return Language{}, fmt.Errorf("initiating language: %s does not exist", name)
 	}
-	return NewLanguage(cLangPtr[0], t), nil
-}
-
-func (t TreeSitter) LanguageCpp(ctx context.Context) (Language, error) {
-	cLangPtr, err := t.languageCpp.Call(ctx)
+	langPtr, err := lang.Call(t.ctx)
 	if err != nil {
-		return Language{}, fmt.Errorf("initiating cpp language: %w", err)
+		return Language{}, fmt.Errorf("initiating language: %w", err)
 	}
-	return NewLanguage(cLangPtr[0], t), nil
+	return NewLanguage(langPtr[0], t), nil
 }

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	sitter "github.com/malivvan/tree-sitter"
 	"log"
+	"strings"
 )
 
 var cppCode = `#include <iostream>
@@ -22,11 +24,11 @@ int main() {
 
 func main() {
 	ctx := context.Background()
-	ts, err := sitter.New(ctx)
+	ts, err := sitter.New(nil, nil)
 	if err != nil {
 		panic(err)
 	}
-	p, err := ts.NewParser(ctx)
+	p, err := ts.NewParser()
 	if err != nil {
 		panic(err)
 	}
@@ -34,43 +36,53 @@ func main() {
 
 	// p.Delete()
 
-	clang, err := ts.LanguageCpp(ctx)
+	clang, err := ts.Language("cpp")
 	if err != nil {
 		panic(err)
 	}
-	v, err := p.GetLanguageVersion(ctx, clang)
+	v, err := p.GetLanguageVersion(clang)
 	if err != nil {
 		panic(err)
 	}
 	log.Printf("c lang version: %+v\n", v)
 
-	err = p.SetLanguage(ctx, clang)
+	err = p.SetLanguage(clang)
 	if err != nil {
 		panic(err)
 	}
+	tree, err := p.ParseString(cppCode)
+	if err != nil {
+		panic(err)
+	}
+	root, err := tree.RootNode()
+	if err != nil {
+		panic(err)
+	}
+	err = walk(ctx, root, 0)
+	if err != nil {
+		panic(err)
+	}
+}
 
-	tree, err := p.ParseString(ctx, cppCode)
+func walk(ctx context.Context, node sitter.Node, indent int) error {
+	s, err := node.String()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	root, err := tree.RootNode(ctx)
+	fmt.Println(strings.Repeat("  ", indent) + s)
+	n, err := node.ChildCount()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	rootKind, err := root.Kind(ctx)
-	if err != nil {
-		panic(err)
+	for i := uint64(0); i < n; i++ {
+		child, err := node.Child(i)
+		if err != nil {
+			return err
+		}
+		err = walk(ctx, child, indent+1)
+		if err != nil {
+			return err
+		}
 	}
-	log.Printf("root node kind: %+v\n", rootKind)
-	rootString, err := root.String(ctx)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("root node string: %+v\n", rootString)
-	rootChildCount, err := root.ChildCount(ctx)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("root node child count: %+v\n", rootChildCount)
-
+	return nil
 }
